@@ -22,15 +22,18 @@ debug:
 	uv run python -m pdb -m src
 
 clean:
+	@rm -rf .mypy_cache src/__pycache__ src/tools/__pycache__ llm_sdk/llm_sdk/__pycache__
+	@rm -rf data/output
+
+fclean:
 	@rm -rf $(GOINFRE_CACHE)
 	@rm -rf $(GOINFRE_VENV)
-	@rm -rf .venv
 
 lint:
 	@HF_HOME=$(GOINFRE_CACHE)/huggingface \
 	UV_CACHE_DIR=$(GOINFRE_CACHE)/uv \
 	UV_PROJECT_ENVIRONMENT=$(GOINFRE_VENV) \
-	uv run flake8 src/ --exclude=.venv
+	uv run flake8 src
 	
 	@HF_HOME=$(GOINFRE_CACHE)/huggingface \
 	UV_CACHE_DIR=$(GOINFRE_CACHE)/uv \
@@ -43,4 +46,4 @@ lint:
 	--check-untyped-defs \
 	--exclude=llm_sdk
 
-.PHONY: init run clean lint
+.PHONY: install run fclean clean lint

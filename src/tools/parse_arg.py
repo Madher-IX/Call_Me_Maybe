@@ -2,6 +2,10 @@ import argparse
 
 
 def parse_arg() -> argparse.Namespace:
+    '''
+    Adds the inputs and output flag so we can add arguments
+    at the command line.
+    '''
     desc = "translate natural language prompts into structured function call"
     parser = argparse.ArgumentParser(
         description=desc
@@ -20,10 +24,5 @@ def parse_arg() -> argparse.Namespace:
         "--output",
         type=str,
         default="data/output/function_calls.json"
-    )
-    parser.add_argument(
-        "--model",
-        type=str,
-        default="Qwen/Qwen3-0.6B"
     )
     return parser.parse_args()

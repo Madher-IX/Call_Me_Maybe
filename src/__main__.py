@@ -15,10 +15,42 @@ import os
 
 
 def main() -> None:
-    print("Starting...")
+    '''
+    The main pipeline, loads everything, processes prompts
+    and generates outputs token-by-token and saves output.
+    Arg:
+        takes nothing
+    Return:
+        return nothing
+    '''
+    call_me_maybe = r"""
+ ██████╗ █████╗ ██╗     ██╗
+██╔════╝██╔══██╗██║     ██║
+██║     ███████║██║     ██║
+██║     ██╔══██║██║     ██║
+╚██████╗██║  ██║███████╗███████╗
+ ╚═════╝╚═╝  ╚═╝╚══════╝╚══════╝
+
+███╗   ███╗███████╗
+████╗ ████║██╔════╝
+██╔████╔██║█████╗
+██║╚██╔╝██║██╔══╝
+██║ ╚═╝ ██║███████╗
+╚═╝     ╚═╝╚══════╝
+
+███╗   ███╗ █████╗ ██╗   ██╗██████╗ ███████╗
+████╗ ████║██╔══██╗╚██╗ ██╔╝██╔══██╗██╔════╝
+██╔████╔██║███████║ ╚████╔╝ ██████╔╝█████╗
+██║╚██╔╝██║██╔══██║  ╚██╔╝  ██╔══██╗██╔══╝
+██║ ╚═╝ ██║██║  ██║   ██║   ██████╔╝███████╗
+╚═╝     ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═════╝ ╚══════╝
+"""
+    for c in call_me_maybe:
+        print(c, end="")
+    print("\n\n⚡Starting...")
     paths = parse_arg()
 
-    print("Loading prompts and functions...")
+    print("\tLoading prompts and functions...")
     prompts = load_prompt(paths.input)
     if not prompts:
         raise RuntimeError(
@@ -30,17 +62,17 @@ def main() -> None:
             "No function found, Please provide at least 1 function."
             )
 
-    print("Building system prompt...")
+    print("\tBuilding system prompt...")
     system_prompt = build_system_prompt(func_defs)
 
-    print(f"Loading the Model {paths.model}...")
+    print("\tLoading the Model ...")
     try:
-        model = Small_LLM_Model(model_name=paths.model)
+        model = Small_LLM_Model()
     except OSError:
         raise RuntimeError(
-            f"The model {paths.model} does not exist."
+            "The model is not available."
         )
-    print("Filtering json valid ids...")
+    print("\tFiltering json valid ids...\n\n")
     vocabulary = load_vocabulary(model)
     valid_ids = filter_json_valid_ids(vocabulary)
 
@@ -48,7 +80,7 @@ def main() -> None:
     all_results = []
     for p in prompts:
         prompt = p.prompt
-        print(f"\n #Processing prompt:{prompt}")
+        print(f"\n⏳ Processing prompt: {prompt!r}...\n\t⟶ ", end="")
         full_prompt = f"{system_prompt}\n\nUser prompt: {prompt}\nAssistant:"
         input_ids = model.encode(full_prompt)[0].tolist()
 
@@ -78,12 +110,12 @@ def main() -> None:
             }
         )
         if parsed.get("name", "none") != "none":
-            print("The prompt is successfully processed:")
-            print(f"  ->{parsed.get("name")}:{parsed.get("arguments")}")
+            print("\n\t[✅]The prompt is successfully processed:")
+            print(f"\t->{parsed.get("name")}:{parsed.get("arguments")}")
         if parsed.get("name", "none") == "none":
-            print("[ERROR]: Something went wrong during the process")
+            print("\n\t[❌]: Something went wrong during the process")
             print(
-                "Please, Make sure your prompt can match with one ", end=""
+                "\tPlease, Make sure your prompt can match with one ", end=""
                 )
             print("of the provided function definition.")
 
@@ -92,9 +124,9 @@ def main() -> None:
     os.makedirs(os.path.dirname(paths.output), exist_ok=True)
     with open(paths.output, "w", encoding="utf-8") as output_file:
         json.dump(parsed_results, output_file, ensure_ascii=False, indent=2)
-    print(f"\n\nThe results are saved in :{paths.output!r}")
-    print(f"Total time: {total_time:2f} seconds")
-    print("Number of prompt successfully processed: ", end="")
+    print(f"\n\n\n[💾]The results are saved in :{paths.output!r}.")
+    print(f"[⌛]Total time: {round(total_time, 2)} seconds.")
+    print("[📊]Number of prompt successfully processed: ", end="")
     print(f"{len(parsed_results)}/{len(all_results)}.")
 
 

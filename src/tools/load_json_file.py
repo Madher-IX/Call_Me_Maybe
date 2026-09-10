@@ -4,6 +4,13 @@ from pydantic import ValidationError
 
 
 def load_prompt(path: str) -> list[Prompt]:
+    '''
+    loads prompts from the input file.
+    arg:
+        path: path to the provided input file.
+    return:
+        list of prompts.
+    '''
     try:
         with open(path, "r", encoding="utf-8") as file:
             prompts = json.load(file)
@@ -18,6 +25,13 @@ def load_prompt(path: str) -> list[Prompt]:
 
 
 def load_function_definition(path: str) -> list[Function_definition]:
+    '''
+    loads function definitions from input file.
+    arg:
+        path: path to the provided input file.
+    return:
+        list of function definitions.
+    '''
     try:
         with open(path, "r", encoding="utf-8") as file:
             func_defs = json.load(file)
