@@ -22,7 +22,7 @@ Then run:
 - `make lint` : to run `flake8 .` and `mypy .` .
 
 `GOOD TO KNOW`: Since all the cache of the uv and hugging face are redirected by make install in goinfre, it is better and easier to just add the flags in Makefile when testing if the program works with:
-`uv run python -m src [--functions_definition <function_definition_file>] [--input <input_file>] [--output <output_file>]`
+`uv run python -m src [--functions_definition <functions_definition_file>] [--input <input_file>] [--output <output_file>]`
 
 # Resources
 - `peer learning`: discuss with peers.
@@ -78,7 +78,7 @@ At the very start, just before the generation of token-by-token, the program gui
 - once the generation done, results will be saved to the output file.
 
 ## Testing flags:
-- To check if the flags `--input`, `--output`, `--function_definition`, it is easier to check it by just modifying the option `run` in `Makefile` than trying to run `uv run python -m src --...` on the command line because of the adjustment done due to the small space we have on our computer in our campus.
+- To check if the flags `--input`, `--output`, `--functions_definition`, it is easier to check it by just modifying the option `run` in `Makefile` than trying to run `uv run python -m src --...` on the command line because of the adjustment done due to the small space we have on our computer in our campus.
 
 - But if you really need to execute the main script on the command line, then run:
 `HF_HOME=path_to_your_goinfre/call_me_maybe_cache/huggingface UV_CACHE_DIR=path_to_your_goinfre/call_me_maybe_cache/uv UV_PROJECT_ENVIRONMENT=path_to_your_goinfre/call_me_maybe_venv uv run python -m src --<FLAG> "<ARG>"`

@@ -4,57 +4,22 @@ import json
 
 
 def chose_between(names: list[str], model: Small_LLM_Model, all_ids: list[int]):
-    full = model.decode(all_ids)
-    prompt = f"{full}, between:"
-    for nb in range(len(names)):
-        all_names += " and, ".join(f" {nb}: {names[nb]}")
-    prompt += all_names + "function name:"
+    identifiers = "abcdefghijklmnopqrstuvwxyz"
+    identifiers = identifiers[0:len(names)]
     valid_ids = []
-    for nb in range(len(names)):
-        valid_ids += [model.encode(nb)[0].to_list()]
-    logits = model.get_logits_from_input_ids(prompt)
+    for identifier in identifiers:
+        valid_ids += [(model.encode(identifier)[0])]
+    logits = model.get_logits_from_input_ids(all_ids)
     chosen_name_nb = get_the_best_id(valid_ids, logits)
-    return names[int(model.decode([chosen_name_nb]))]
-
+    loc = identifiers.find(model.decode(chosen_name_nb))
+    return names[loc]
 
 def chose_name(
         names: list[str], model: Small_LLM_Model, all_ids: list[int]
         ) -> str:
-    res_id = []
-    while True:
-        chosen_text = model.decode(res_id)
-        valid_ids = set()
-        valid_names = [n for n in names if n.startswith(chosen_text)]
-
-        if len(valid_names) == 1:
-            quote_id = (model.encode('"')[0].tolist())[0]
-            remaining_text = valid_names[0][len(chosen_text):]
-            remaining_ids = model.encode(remaining_text)[0].tolist()
-            print(f'{remaining_text}"', end="", flush=True)
-            res_id.extend(remaining_ids)
-            res_id.append(quote_id) 
-            break
-
-        if 
-
-        for name in valid_names:
-            remaining_text = name[len(chosen_text):]
-            if remaining_text:
-                next_valid_id = (model.encode(remaining_text)[0].tolist())[0]
-                valid_ids.add(next_valid_id)
-            else:
-                quote_id = (model.encode('"')[0].tolist())[0]
-                valid_ids.add(quote_id)
-
-        logits = model.get_logits_from_input_ids(all_ids + res_id)
-        next_id = get_the_best_id(valid_ids, logits)
-        res_id.append(next_id)
-        next_text = model.decode(next_id)
-        print(next_text, end="", flush=True)
-        chosen_text += next_text
-        if next_text == '"':
-            break
-    return model.decode(res_id)
+    name = chose_between(names, model, all_ids) + '"'
+    print(name, end="")
+    return name
 
 
 def get_parameters_ids(
@@ -97,10 +62,15 @@ def get_parameters_ids(
         elif func.parameters[parameter].type == "boolean":
             valid_ids = safe_bool_ids
         chosen_text = ""
+        all_chosen_text = ""
+        token_nb = 0
         while '"' not in chosen_text:
             logits = model.get_logits_from_input_ids(all_ids + res_id)
             chosen_id = get_the_best_id(valid_ids, logits)
             chosen_text = model.decode([chosen_id])
+            if len(all_chosen_text) > 10 and all_chosen_text[(len(all_chosen_text) - 10):] in all_chosen_text[0:(len(all_chosen_text) - 10)] or token_nb > 50:
+                chosen_text = '"'
+                chosen_id = model.encode('"')[0].tolist()[0]
             if '"' in chosen_text and chosen_text != '"':
                 chosen_text = chosen_text[0:(chosen_text.find('"') + 1)]
                 chosen_id = model.encode(chosen_text)[0].tolist()
@@ -108,6 +78,8 @@ def get_parameters_ids(
             else:
                 res_id.append(chosen_id)
             print(chosen_text, end="", flush=True)
+            all_chosen_text += chosen_text
+            token_nb += 1
 
         if parameter != list(func.parameters.keys())[len(func.parameters) - 1]:
             res_id.extend(model.encode(',')[0].tolist())
@@ -165,17 +137,20 @@ def build_system_prompt(functions: list[Function_definition]) -> str:
     Return:
         the pre-prompt
     '''
+    identifiers = "abcdefghijklmnopqrstuvwxyz"
     lines = [
         "STRICT SYSTEM RULE: Use ONLY a matching function from the list below",
         "Never use an unrelated function for a different task.",
         "",
         "Available functions:"
     ]
+    loc = 0
     for fn in functions:
         params = ", ".join(
             f"{name} : {info.type}" for name, info in fn.parameters.items()
         )
-        lines.append(f" -{fn.name}({params}): {fn.description}")
+        lines.append(f" -{identifiers[loc]}({params}): {fn.description}")
+        loc += 1
     a = 'Output ONLY valid JSON:{"name" : "<fn>", "parameters": {<argument>}}'
     lines.append("\n" + a)
     return "\n".join(lines)

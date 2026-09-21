@@ -8,6 +8,7 @@ from src.tools.models import Function_definition
 from src.tools.cast_output import cast_output
 import json
 import os
+import sys
 #check if dependencies are all intalled first.
 
 
@@ -66,7 +67,7 @@ def process_prompt(
         generated_json = json.loads(generated_text)
     except json.JSONDecodeError as error:
         print(error)
-        pass
+        sys.exit(1)
 
     return {
         "prompt": prompt,
@@ -83,7 +84,11 @@ def main() -> None:
     print("[Loading:]")
     print(f"\t-Prompts from {args.input}")
     print(f"\t-Functions definition from {args.functions_definition}")
-    prompts, funcs_def = load_inputs(args)
+    try:
+        prompts, funcs_def = load_inputs(args)
+    except RuntimeError as error:
+        print(error)
+        return
 
     system_prompt = build_system_prompt(funcs_def)
 
@@ -115,7 +120,10 @@ def main() -> None:
     print(f"Total time: {round(total_time, 2)} seconds.")
     casted_results = [cast_output(obj, funcs_def) for obj in all_results]
 
-    os.makedirs(os.path.dirname(args.output), exist_ok=True)
+    try:
+        os.makedirs(os.path.dirname(args.output), exist_ok=True)
+    except OSError:
+        pass
     with open(args.output, "w", encoding="utf-8") as output_file:
         json.dump(casted_results, output_file, ensure_ascii=False, indent=2)
     print(f"\nResults are saved in {args.output!r}.")
